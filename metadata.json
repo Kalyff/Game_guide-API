@@ -1,0 +1,6 @@
+{
+  "name": "Game Guides API",
+  "description": "API RESTful para Guias e Tutoriais de Jogos com padrão MVC, em Node.js com Express e frontend em React.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
