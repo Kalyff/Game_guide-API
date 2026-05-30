@@ -1,2 +1,10 @@
 $kind: collection
 name: New Collection
+variables:
+  - key: senha
+    value: ""
+    secret: false
+  - key: senha
+    value: ""
+    disabled: false
+    secret: false
