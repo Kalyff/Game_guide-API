@@ -6,7 +6,10 @@ import { guidesDB, commentsDB, Guide, Comment } from "../models/Database";
  * Rota: POST /api/guides
  */
 export const createGuide = (req: Request, res: Response): void => {
-  const { gameId, userId, title, content, category, tags } = req.body;
+  
+const { gameId, title, content, category, tags } = req.body;
+
+const userId = (req as any).user?.id;
 
   if (!gameId || !userId || !title || !content || !category) {
     res.status(400).json({ error: "Parâmetros obrigatórios ausentes." });
