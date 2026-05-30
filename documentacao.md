@@ -10,6 +10,8 @@ Este microsserviço é responsável por gerenciar o motor de fórum, wiki, walkt
     Authorization: Bearer <seu_token_jwt>
 Content-Type: application/json
 
+URL DE PRODUÇÃO: https://gameguide-api-production.up.railway.app/
+
 ---
 
 ## 🚀 Endpoints (Rotas da API)
