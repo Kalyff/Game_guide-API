@@ -12,6 +12,8 @@ Content-Type: application/json
 
 URL DE PRODUÇÃO: https://gameguide-api-production.up.railway.app/
 
+-> senha de token para simular validação: chavesenha
+
 ---
 
 ## 🚀 Endpoints (Rotas da API)
