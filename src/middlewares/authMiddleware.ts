@@ -1,45 +1,52 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { importSPKI, jwtVerify } from 'jose';
 
-// Esta é a chave secreta. Quando o integrador te passar a real, você substitui aqui!
-const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta_provisoria_da_sala';
+// pega  as variáveis de ambiente 
+const ISSUER = process.env.JWT_ISSUER!;
+const AUDIENCE = process.env.JWT_AUDIENCE!;
+// arruma  a quebra de linha da chave pública que vem do . env
+const PUBLIC_KEY_PEM = process.env.JWT_PUBLIC_KEY_PEM!.replace(/\\n/g, '\n');
 
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-  };
+let publicKeyPromise: ReturnType<typeof importSPKI> | null = null;
+
+function getPublicKey() {
+  if (!publicKeyPromise) {
+    publicKeyPromise = importSPKI(PUBLIC_KEY_PEM, 'RS256');
+  }
+  return publicKeyPromise;
 }
 
-export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
-  // 1. Pega o token que vem no cabeçalho (Authorization Header)
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    res.status(401).json({ error: 'Token não fornecido. Acesso não autorizado.' });
-    return;
-  }
-
-  // O formato padrão do cabeçalho é: "Bearer <TOKEN>". Vamos separar a palavra Bearer do token real.
-  const parts = authHeader.split(' ');
-
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    res.status(401).json({ error: 'Token mal formatado.' });
-    return;
-  }
-
-  const token = parts[1];
-
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // 2. Valida o token com a chave secreta
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+    const authHeader = req.header('authorization');
+    if (!authHeader) {
+      return res.status(401).json({ message: 'Missing Authorization header' });
+    }
 
-    // 3. Se deu certo, injeta os dados do usuário na requisição para o controller usar
-    req.user = { id: decoded.id };
+    const [scheme, token] = authHeader.split(' ');
+    if (!scheme || !token || scheme.toLowerCase() !== 'bearer') {
+      return res.status(401).json({ message: 'Authorization must be Bearer token' });
+    }
 
-    // Avança para o Controller
-    next();
-  } catch (err) {
-    // Se o token estiver expirado ou for falso, cai aqui
-    res.status(401).json({ error: 'Token inválido ou expirado.' });
+    const publicKey = await getPublicKey();
+    const { payload } = await jwtVerify(token, publicKey, {
+      issuer: ISSUER,
+      audience: AUDIENCE,
+      algorithms: ['RS256']
+    });
+
+    if (typeof payload.sub !== 'string' || !payload.sub.trim()) {
+      return res.status(401).json({ message: 'Invalid token claims' });
+    }
+
+    // inseree os dados do usuário na requisição, ignorando o erro de tipagem do TS
+    (req as any).auth = {
+      id: payload.sub,
+      token
+    };
+
+    return next();
+  } catch (error) {
+    return res.status(401).json({ message: 'Invalid or expired access token' });
   }
-}
+};
