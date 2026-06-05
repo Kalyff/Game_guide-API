@@ -9,7 +9,7 @@ export const createGuide = (req: Request, res: Response): void => {
   
 const { gameId, title, content, category, tags } = req.body;
 
-const userId = (req as any).user?.id;
+const userId = "JogadorLocal"; // Mock fixo pois não há mais autenticação
 
   if (!gameId || !userId || !title || !content || !category) {
     res.status(400).json({ error: "Parâmetros obrigatórios ausentes." });

@@ -1,3 +1,4 @@
+//Desistência de tentativa para colocar validação
 import { Request, Response, NextFunction } from 'express';
 import { importSPKI, jwtVerify } from 'jose';
 
@@ -50,3 +51,4 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     return res.status(401).json({ message: 'Invalid or expired access token' });
   }
 };
+
